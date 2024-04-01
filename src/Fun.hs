@@ -50,5 +50,24 @@ fv (Let x e1 e2) = fv e1 `union` delete x (fv e2)
 fv (Fix e)       = fv e
 
 
+data Op     = PLUS
+            | MINUS
+            | MULT
+            deriving(Eq, Show)
+
+data Token  = VAR String
+            | CONST Int
+            | OP Op
+            | LAMBDA
+            | DOT
+            | LET
+            | EQUAL
+            | IN
+            | IFZERO
+            | FIX
+            | LPARENT
+            | RPARENT
+            deriving(Eq, Show)
+
 -- end of file -------------------------------------------------
 

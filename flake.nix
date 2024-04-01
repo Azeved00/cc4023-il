@@ -16,7 +16,7 @@
             inherit name ROOT;
 
             buildInputs = with pkgs; [
-                haskell.compiler.ghc98
+                haskell.compiler.ghc96
                 haskellPackages.cabal-install 
             ];
 
@@ -24,7 +24,8 @@
                 export NIX_SHELL_NAME="${name}" 
                 echo -ne "\033]0;${name}\007"
 
-                reload
+                alias build="cabal run"
+                alias run="cabal run -v0"
             '';
 
         };
