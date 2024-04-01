@@ -1,16 +1,12 @@
 module Main where
-import Lexer
-import Parser
-import SECD1
 
+import SECD
 
 main = do
     txt <- getContents
-
-    let lexer = alexScanTokens txt
-        pars  = parse $ lexer
-        comp  = compileMain $ pars 
+    let term = parse txt
+        instr  = compile  term
         
-    putStrLn $ show $ pars
-    putStrLn $ show $ comp
+    putStrLn $ show $ term
+    putStrLn $ show $ instr
     return ()

@@ -30,7 +30,7 @@ data Term = Var Ident               -- variables
           | IfZero Term Term Term   -- conditional
           | Let Ident Term Term     -- local definition
           | Fix Term                -- fixed-point operator
-            deriving Show
+          deriving (Eq, Show)
 
 -- indentifiers are just strings
 type Ident = String

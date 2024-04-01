@@ -26,6 +26,7 @@
 
                 alias build="cabal run"
                 alias run="cabal run -v0"
+                alias test="cabal test"
             '';
 
         };

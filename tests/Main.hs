@@ -5,8 +5,13 @@
   This module contains some example programs.
   Pedro Vasconcelos, 2008--2009.
 -}
-module Examples where
+module Main where
+
+import Test.HUnit
+import qualified System.Exit as Exit
+
 import Fun
+import qualified SimpleTests (runTests)
 
 -- simple computations
 ex1 = (Const 42 :+ Const 23) :* Const 5
@@ -61,4 +66,11 @@ bug1 = Const 42 :+ Lambda "x" (Var "x")
 
 bug2 = App (Const 42) (Const 1)
 
+
+main :: IO ()
+main = do
+    result <- SimpleTests.runTests
+    if failures result > 0 then Exit.exitFailure else Exit.exitSuccess
+ 
+ 
 
