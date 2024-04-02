@@ -31,7 +31,7 @@ fix                     { \_ -> FIX }
 
 
 
-$digit+                 { \s -> CONST (read s) }
+$digit+              { \s -> CONST (read s) }
 $alpha($alpha|$digit)*  { \s -> VAR (map toLower s) }
 
 {
