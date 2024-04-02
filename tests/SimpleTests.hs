@@ -28,7 +28,7 @@ test2 :: Test
 test2 = 
     let
         input   = "\\x.x"
-        message = "simple test 2: Identity Funciton" 
+        message = "Identity Funciton" 
         output  = Lambda "x" (Var "x")
     in
     TestCase $ assertEqual message output (parse input)
@@ -38,7 +38,7 @@ test3 :: Test
 test3 = 
     let
         input   = "\\x.x+1"
-        message = "simple test 3: Successor Funciton" 
+        message = "Successor Funciton" 
         output = Lambda "x" (Var "x" :+ Const 1)
     in
     TestCase $ assertEqual message output (parse input)
@@ -49,7 +49,7 @@ test4 :: Test
 test4 = 
     let
         input   = "\\x.\\y.ifzero (x-y) (y) (x)"
-        message = "simple test 4: Funciton between two integers" 
+        message = "Funciton between two integers" 
         output = Lambda "x" 
               (Lambda "y"
                (IfZero (Var "x" :- Var "y") 
@@ -57,4 +57,7 @@ test4 =
     in
     TestCase $ assertEqual message output (parse input)
  
-runTests = runTestTT $ TestList [test1, test1', test2, test3]
+tl = TestList [ TestLabel "Simple test 1.1" test1, 
+                TestLabel "Simple test 1.2" test1',
+                TestLabel "Idendity Function" test2,
+                TestLabel "Function between 2 ints" test3]
