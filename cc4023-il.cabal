@@ -19,7 +19,7 @@ library SECD-lib
 
 executable SECD
     main-is:            Main.hs
-    other-modules:      Fun, Lexer, Parser, SECD1
+    other-modules:      SECD, Fun, Lexer, Parser, SECD1
     build-tool-depends: alex:alex, happy:happy
     build-depends:      base, containers, array, mtl
     hs-source-dirs:     src

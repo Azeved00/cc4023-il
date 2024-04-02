@@ -34,9 +34,9 @@ test2 =
 test3 :: Test
 test3 = 
     let
-        input   = "(fix (\\f.\\n.ifzero n 1 ((f (n - 1))*n))) (-1)"
+        input   = "(fix (\\f.\\n.ifzero n 1 ((f (n - 1))*n))) (0-1)"
         message = "factoial of negative number" 
-        output = App fact (Const (-1))
+        output = App fact (Const 0 :- Const 1)
 
     in
     TestCase $ assertEqual message output (parse input)

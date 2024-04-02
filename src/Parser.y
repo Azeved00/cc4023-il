@@ -38,7 +38,6 @@ Term : var                      { Var $1 }
      | Term '+' Term            { $1 :+ $3 }
      | Term '-' Term            { $1 :- $3 }
      | Term '*' Term            { $1 :* $3 }
-     | '-' const                { Const (-$2) }
      | ifzero Term Term Term    { IfZero $2 $3 $4 }
      | let var '=' Term in Term { Let $2 $4 $6 }
      | fix Term                 { Fix $2 }
