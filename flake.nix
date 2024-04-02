@@ -24,9 +24,9 @@
                 export NIX_SHELL_NAME="${name}" 
                 echo -ne "\033]0;${name}\007"
 
-                alias build="cabal build"
-                alias run="cabal run -v0"
-                alias test="cabal test --test-show-details=failures --test-option=--color"
+                alias build="cabal --enable-nix build"
+                alias run="cabal --enable-nix run -v0"
+                alias test="cabal --enable-nix test --test-show-details=streaming --test-option=--color"
             '';
 
         };
