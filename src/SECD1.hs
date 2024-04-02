@@ -28,6 +28,7 @@ data Instr = HALT            -- finished
            | LDRF [Instr]    -- load a recursive closure
            | AP              -- apply
            | RTN             -- return 
+           | TEST [Instr]    -- test branch
              deriving Show
 
 -- a code block (list of instructions)
@@ -145,13 +146,41 @@ runStats code = (value, maxstack, maxdump)
 
 -- compile a lambda term into SECD code
 compile :: Term -> [Ident] -> [Instr]
+-------------- OPTIMIZATIONS -----------------------
+-- 2) Optimization for Simpler conditionals
+compile (Lambda x (IfZero c ct cf)) sym 
+  = let sym' = (x:sym)
+        cond = compile c sym'
+        codeT = compile ct sym' ++ [RTN]
+        codeF = compile cf sym' ++ [RTN]
+        code = cond ++ [TEST codeT] ++ codeF
+    in [LDF code]
 
+compile (Fix (Lambda f (Lambda x (IfZero c ct cf)))) sym
+  = let sym' = (x:f:sym)
+        cond = compile c sym'
+        codeT = compile ct sym' ++ [RTN]
+        codeF = compile cf sym' ++ [RTN]
+        code = cond ++ [TEST codeT] ++ codeF
+    in [LDRF code]
+
+
+
+
+
+-------- Normal Implementation --------------
 compile (Var x) sym 
     = case elemIndex x sym of
         Nothing -> error ("free variable: " ++ show x)
         Just k -> [LD k]
 -- "elemIndex x xs" 
 -- gives the index of first occurence of x in xs or Nothing 
+
+compile (IfZero e1 e2 e3) sym
+  = let code1 = compile e1 sym 
+        code2 = compile e2 sym ++ [JOIN]
+        code3 = compile e3 sym ++ [JOIN]
+    in code1 ++ [SEL code2 code3]
 
 compile (Lambda x e) sym 
   = let code = compile e (x:sym) ++ [RTN]
@@ -184,11 +213,7 @@ compile (e1 :* e2) sym
         code2 = compile e2 sym 
     in code1 ++ code2 ++ [MUL]
 
-compile (IfZero e1 e2 e3) sym
-  = let code1 = compile e1 sym 
-        code2 = compile e2 sym ++ [JOIN]
-        code3 = compile e3 sym ++ [JOIN]
-    in code1 ++ [SEL code2 code3]
+
 
 
 compile (Let x e1 e2) sym
