@@ -29,7 +29,8 @@ data Instr = HALT            -- finished
            | AP              -- apply
            | RTN             -- return 
            | TEST [Instr]    -- test branch
-             deriving Show
+           | DAP             -- direct apply
+            deriving(Show,Eq)
 
 -- a code block (list of instructions)
 type Code = [Instr]
@@ -113,6 +114,15 @@ execute (stack, env, JOIN:code, (_,_,code'):dump, store)
 execute (stack, env, HALT:code, dump, store)
     = (stack, env, [], dump, store)
 
+-- Implementation Of Optimizations
+execute (I n:stack, env, (TEST code1):code, dump,store)
+    | n==0      = (stack, env, code1, ([],[],code):dump, store)
+    | otherwise = (stack, env, code, dump, store)
+
+execute (arg:A addr:stack, env, DAP:code, dump, store)
+    = let Just (code',env')= Map.lookup addr store
+      in ([], arg:env', code', dump, store)
+
 execute conf
     = error ("execute: undefined for " ++ show conf)
 
@@ -132,7 +142,9 @@ run code = value
     where trace = executeT ([],[],code,[],Map.empty)
           (value:_, _, _, _, _) = last trace
 
-
+debug :: Code -> [Conf]
+debug code = executeT ([],[],code,[],Map.empty)
+          
 
 -- valor, máximo comprimento de pilha e do dump
 runStats :: Code -> (Value, Int, Int)
@@ -148,6 +160,7 @@ runStats code = (value, maxstack, maxdump)
 compile :: Term -> [Ident] -> [Instr]
 -------------- OPTIMIZATIONS -----------------------
 -- 2) Optimization for Simpler conditionals
+{-
 compile (Lambda x (IfZero c ct cf)) sym 
   = let sym' = (x:sym)
         cond = compile c sym'
@@ -163,8 +176,21 @@ compile (Fix (Lambda f (Lambda x (IfZero c ct cf)))) sym
         codeF = compile cf sym' ++ [RTN]
         code = cond ++ [TEST codeT] ++ codeF
     in [LDRF code]
+-}
+-- 3) Simplifyinf Apply sequences 
+compile (Lambda x (App c1 c2)) sym 
+  = let sym' = (x:sym)
+        code1 = compile c1 sym'
+        code2 = compile c2 sym' 
+        code =  code1 ++ code2 ++ [DAP]
+    in [LDF code]
 
-
+compile (Fix (Lambda f (Lambda x (App c1 c2)))) sym
+  = let sym' = (x:f:sym)
+        code1 = compile c1 sym'
+        code2 = compile c2 sym' 
+        code = code1 ++ code2 ++ [DAP]
+    in [LDRF code]
 
 
 
@@ -213,16 +239,19 @@ compile (e1 :* e2) sym
         code2 = compile e2 sym 
     in code1 ++ code2 ++ [MUL]
 
-
-
-
 compile (Let x e1 e2) sym
     = compile (App (Lambda x e2) e1) sym
  
 
 -- compile the main expression
-compileMain :: Term ->  [Instr]
-compileMain e = compile e [] ++ [HALT]
+compileMain :: Term -> Bool ->  [Instr]
+compileMain e o = if o 
+                    then comp 
+                    else comp --optimize comp []
+                where comp = compile e [] ++ [HALT]
 
 
-
+optimize :: [Instr] -> [Ident]-> [Instr]
+optimize (LDF (((SEL cT cF):ys)):xs) sym = 
+    [LDF ([TEST cT] ++ cF ++ ys)] ++ optimize xs sym 
+optimize (x:e) sym = [x] ++ optimize e sym
