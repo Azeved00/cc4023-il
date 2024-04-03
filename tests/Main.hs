@@ -15,6 +15,7 @@ import qualified SimpleTests
 import qualified ClosureTests   
 import qualified FactorialTests 
 import qualified RecursionTests 
+import qualified OptimizationTests
 
 
 
@@ -24,6 +25,7 @@ main = do
     runTestTT ClosureTests.tl
     runTestTT FactorialTests.tl
     runTestTT RecursionTests.tl
+    runTestTT OptimizationTests.tl
     return ()
     --let
     --    fails = foldr  (\r f -> f + (failures r )) 0 [s,c,f,r]
