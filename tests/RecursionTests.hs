@@ -16,6 +16,6 @@ test1 =
                             ((Var "n" :* Var "n") :+ 
                                 App (Var "f") (Var "n" :- Const 1)))))
     in
-    TestCase $ assertEqual message output (parse input)
+    TestCase $ assertEqual message output (parse $ lexer $ input)
  
 tl = TestLabel "recursive sum" test1

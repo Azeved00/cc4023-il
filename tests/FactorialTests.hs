@@ -19,7 +19,7 @@ test1 =
         message = "factorial function" 
         output = fact
     in
-    TestCase $ assertEqual message output (parse input)
+    TestCase $ assertEqual message output (parse  $ lexer $input)
 
 test2 :: Test
 test2 = 
@@ -29,7 +29,7 @@ test2 =
         output = App fact (Const 10)
 
     in
-    TestCase $ assertEqual message output (parse input)
+    TestCase $ assertEqual message output (parse $ lexer $ input)
 
 test3 :: Test
 test3 = 
@@ -39,7 +39,7 @@ test3 =
         output = App fact (Const 0 :- Const 1)
 
     in
-    TestCase $ assertEqual message output (parse input)
+    TestCase $ assertEqual message output (parse $ lexer $ input)
 
 
 tl = TestList [ TestLabel "factorial definition" test1, 
