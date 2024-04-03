@@ -19,7 +19,7 @@ test1 =
         message = "factorial function" 
         output = fact
     in
-    TestCase $ assertEqual message output (parse  $ lexer $input)
+    TestCase $ assertEqual message output (parse  $ lexer $ input)
 
 test2 :: Test
 test2 = 
