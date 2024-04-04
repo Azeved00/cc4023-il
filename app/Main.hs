@@ -21,7 +21,7 @@ mainLoop str set=
     let 
         tokens  = lexer str
         term    = parse tokens
-        instr   = compile  term
+        instr   = compile term True
         res     = debug instr
     in do 
     case set of

@@ -245,13 +245,32 @@ compile (Let x e1 e2) sym
 
 -- compile the main expression
 compileMain :: Term -> Bool ->  [Instr]
-compileMain e o = if o 
-                    then comp 
-                    else comp --optimize comp []
-                where comp = compile e [] ++ [HALT]
+compileMain e o =let comp =  compile e [] ++ [HALT]
+                in if o then optimize comp [] else comp
 
 
+-- Otimization 1: simpler conditionals
+-- Note: init is O(n), use Sequences to get better performance
 optimize :: [Instr] -> [Ident]-> [Instr]
-optimize (LDF (((SEL cT cF):ys)):xs) sym = 
-    [LDF ([TEST cT] ++ cF ++ ys)] ++ optimize xs sym 
+optimize (SEL ct cf:RTN:xs) sym = let
+        ct'   = init ct   
+        cf'   = init cf   
+        codeT = optimize (ct'++[RTN]) sym
+        codeF = optimize (cf'++[RTN]) sym
+    in [TEST codeT] ++ codeF ++ optimize xs sym 
+
+optimize (SEL ct cf:xs) sym = let
+        codeT = optimize ct sym
+        codeF = optimize cf sym
+    in [SEL codeT codeF] ++ optimize xs sym
+
+optimize (LDF x:xs) sym = let 
+        code = optimize x sym
+    in [LDF code] ++ optimize xs sym
+
+optimize (LDRF x:xs) sym = let 
+        code = optimize xs sym
+    in [LDRF code] ++ optimize xs sym
+
 optimize (x:e) sym = [x] ++ optimize e sym
+optimize [] sym = []
