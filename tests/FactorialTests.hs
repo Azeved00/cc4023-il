@@ -15,7 +15,7 @@ fact = Fix
 test1 :: Test
 test1 = 
     let    
-        input   = "fix \\f.\\n.ifzero n 1 ((f (n - 1))*n)"
+        input   = "fix (\\f.\\n.ifzero n 1 ((f (n - 1))*n))"
         message = "factorial function" 
         output = fact
     in

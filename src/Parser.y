@@ -46,7 +46,6 @@ Atom : var                      { Var $1 }
      | ifzero Atom Atom Atom    { IfZero $2 $3 $4 }
      | let var '=' Atom in Atom { Let $2 $4 $6 }
      | fix Lamb                 { Fix $2 }
-     | fix '(' Lamb ')'         { Fix $3 }
      | '(' Lamb ')'             { $2 }
      
 {

@@ -7,7 +7,7 @@ import Test.HUnit
 test1 :: Test
 test1 = 
     let
-        input   = "fix\\f.\\n.ifzero (n) (0) (n*n + f (n-1))"
+        input   = "fix (\\f.\\n.ifzero (n) (0) (n*n + f (n-1)))"
         message = "recursion sum" 
         output = Fix (Lambda "f"
                     (Lambda "n"
