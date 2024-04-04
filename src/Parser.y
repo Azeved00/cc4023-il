@@ -25,27 +25,29 @@ fix         { FIX }
 '('         { LPARENT }
 ')'         { RPARENT }
 
+%left F
 %left '+' '-'
 %left '*'
+%left APPLY
+%left ARITH
 %%
 
 Lamb : lambda var '.' Lamb      { Lambda $2 $4 }
-     | Term                     { $1 }
+     | Term           %prec F   { $1 }
 
 Term : Term '+' Term            { $1 :+ $3 }
      | Term '-' Term            { $1 :- $3 }
      | Term '*' Term            { $1 :* $3 }
+     | ifzero Atom Atom Atom    { IfZero $2 $3 $4 }
+     | let var '=' Atom in Atom { Let $2 $4 $6 }
+     | fix Lamb                 { Fix $2 }
      | Apply                    { $1 }
- 
 
-Apply: Apply Atom               { App $1 $2 }
+Apply: Apply Atom %prec APPLY   { App $1 $2 }
      | Atom                     { $1 }
 
 Atom : var                      { Var $1 }
      | const                    { Const $1 }
-     | ifzero Atom Atom Atom    { IfZero $2 $3 $4 }
-     | let var '=' Atom in Atom { Let $2 $4 $6 }
-     | fix Lamb                 { Fix $2 }
      | '(' Lamb ')'             { $2 }
      
 {
