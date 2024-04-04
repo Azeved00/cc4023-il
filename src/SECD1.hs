@@ -252,7 +252,7 @@ optimize (LDF x:xs) sym = let
     in [LDF code] ++ optimize xs sym
 
 optimize (LDRF x:xs) sym = let 
-        code = optimize xs sym
+        code = optimize x sym
     in [LDRF code] ++ optimize xs sym
 
 optimize (x:e) sym = [x] ++ optimize e sym
