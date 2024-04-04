@@ -15,7 +15,7 @@ fact = Fix
 test1 :: Test
 test1 = 
     let    
-        input   = "fix (\\f.\\n.ifzero n 1 ((f (n - 1))*n))"
+        input   = "fix \\f.\\n.ifzero n 1 ((f (n - 1))*n)"
         message = "factorial function" 
         output = fact
     in
@@ -24,7 +24,7 @@ test1 =
 test2 :: Test
 test2 = 
     let
-        input   = "(fix (\\f.\\n.ifzero n 1 ((f (n - 1))*n))) 10"
+        input   = "(fix \\f.\\n.ifzero n 1 ((f (n - 1))*n)) 10"
         message = "compute the factorial of 10" 
         output = App fact (Const 10)
 
@@ -34,7 +34,7 @@ test2 =
 test3 :: Test
 test3 = 
     let
-        input   = "(fix (\\f.\\n.ifzero n 1 ((f (n - 1))*n))) (0-1)"
+        input   = "(fix \\f.\\n.ifzero n 1 ((f (n - 1))*n)) (0-1)"
         message = "factoial of negative number" 
         output = App fact (Const 0 :- Const 1)
 

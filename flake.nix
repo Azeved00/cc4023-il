@@ -18,6 +18,7 @@
             buildInputs = with pkgs; [
                 haskell.compiler.ghc96
                 haskellPackages.cabal-install 
+                happy
             ];
 
             shellHook = ''

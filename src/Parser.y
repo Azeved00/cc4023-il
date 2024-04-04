@@ -29,30 +29,26 @@ fix         { FIX }
 %left '*'
 %%
 
+Lamb : lambda var '.' Lamb      { Lambda $2 $4 }
+     | Term                     { $1 }
 
-Term : Apply                    { $1 }
-     | Lamb                     { $1 }
-     | Arith                    { $1 }
-     | Atom                     { $1 }
-
-Lamb : lambda var '.' Atom      { Lambda $2 $4 }
-     | lambda var '.' Lamb      { Lambda $2 $4 }
-
-Apply: Apply Atom               { App $1 $2 }
-     | Atom Atom                { App $1 $2 }
-
-Arith: Term '+' Term            { $1 :+ $3 }
+Term : Term '+' Term            { $1 :+ $3 }
      | Term '-' Term            { $1 :- $3 }
      | Term '*' Term            { $1 :* $3 }
+     | Apply                    { $1 }
+ 
+
+Apply: Apply Atom               { App $1 $2 }
+     | Atom                     { $1 }
 
 Atom : var                      { Var $1 }
-     | '(' Term ')'             { $2 }
      | const                    { Const $1 }
      | ifzero Atom Atom Atom    { IfZero $2 $3 $4 }
      | let var '=' Atom in Atom { Let $2 $4 $6 }
      | fix Lamb                 { Fix $2 }
      | fix '(' Lamb ')'         { Fix $3 }
-
+     | '(' Lamb ')'             { $2 }
+     
 {
 parseError :: [Token] -> a
 parseError toks = error ("Parse Error: @" ++ (show (head toks)) ++ " in " ++ show (take 10 toks) ++ " " ++ show (length toks))
