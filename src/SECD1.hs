@@ -158,25 +158,6 @@ runStats code = (value, maxstack, maxdump)
 
 -- compile a lambda term into SECD code
 compile :: Term -> [Ident] -> [Instr]
--------------- OPTIMIZATIONS -----------------------
--- 2) Optimization for Simpler conditionals
-{-
-compile (Lambda x (IfZero c ct cf)) sym 
-  = let sym' = (x:sym)
-        cond = compile c sym'
-        codeT = compile ct sym' ++ [RTN]
-        codeF = compile cf sym' ++ [RTN]
-        code = cond ++ [TEST codeT] ++ codeF
-    in [LDF code]
-
-compile (Fix (Lambda f (Lambda x (IfZero c ct cf)))) sym
-  = let sym' = (x:f:sym)
-        cond = compile c sym'
-        codeT = compile ct sym' ++ [RTN]
-        codeF = compile cf sym' ++ [RTN]
-        code = cond ++ [TEST codeT] ++ codeF
-    in [LDRF code]
--}
 -- 3) Simplifyinf Apply sequences 
 compile (Lambda x (App c1 c2)) sym 
   = let sym' = (x:sym)
@@ -249,6 +230,7 @@ compileMain e o =let comp =  compile e [] ++ [HALT]
                 in if o then optimize comp [] else comp
 
 
+-------------- OPTIMIZATIONS -----------------------
 -- Otimization 1: simpler conditionals
 -- Note: init is O(n), use Sequences to get better performance
 optimize :: [Instr] -> [Ident]-> [Instr]
@@ -259,6 +241,11 @@ optimize (SEL ct cf:RTN:xs) sym = let
         codeF = optimize (cf'++[RTN]) sym
     in [TEST codeT] ++ codeF ++ optimize xs sym 
 
+-- Optimization 2: direct application
+optimize (AP:RTN:xs) sym = let
+    in [DAP] ++ optimize xs sym 
+
+-- Normal traversal
 optimize (SEL ct cf:xs) sym = let
         codeT = optimize ct sym
         codeF = optimize cf sym
