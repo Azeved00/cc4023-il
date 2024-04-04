@@ -49,6 +49,21 @@ test3 =
     in
     TestLabel message $ TestCase $ assertEqual message output (SECD.compile (parse $ lexer $ input) True)
 
+test4 :: Test
+test4 = 
+    let
+        input   = "\\f.\\x.(x+1)"
+        message = "Optimized closures"
+        output  =   [LDF 
+                        [AA,
+                        LD 0,
+                        LDC 1,
+                        ADD,
+                        RTN]
+                    ,HALT]
+    in
+    TestLabel message $ TestCase $ assertEqual message output (SECD.compile (parse $ lexer $ input) True)
+
 
  
-tl = TestList [ test1, test2, test3 ]
+tl = TestList [ test1, test2, test3, test4]

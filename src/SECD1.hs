@@ -30,6 +30,9 @@ data Instr = HALT            -- finished
            | RTN             -- return 
            | TEST [Instr]    -- test branch
            | DAP             -- direct apply
+           | AA              -- add arguments
+           | MA              -- modify arguments
+           | TRAP            -- Full Tail Recursion
             deriving(Show,Eq)
 
 -- a code block (list of instructions)
@@ -66,6 +69,9 @@ type Dump  = [(Stack,Env,Code)]
 type Conf  = (Stack, Env, Code, Dump, Store)
 
 
+-----------------------------------------------------------------
+-- EXECUTE SECD Code
+-----------------------------------------------------------------
 -- execute a single SECD instruction
 execute :: Conf -> Conf
 
@@ -156,26 +162,9 @@ runStats code = (value, maxstack, maxdump)
 
 
 
--- compile a lambda term into SECD code
-compile :: Term -> [Ident] -> [Instr]
--- 3) Simplifyinf Apply sequences 
-compile (Lambda x (App c1 c2)) sym 
-  = let sym' = (x:sym)
-        code1 = compile c1 sym'
-        code2 = compile c2 sym' 
-        code =  code1 ++ code2 ++ [DAP]
-    in [LDF code]
-
-compile (Fix (Lambda f (Lambda x (App c1 c2)))) sym
-  = let sym' = (x:f:sym)
-        code1 = compile c1 sym'
-        code2 = compile c2 sym' 
-        code = code1 ++ code2 ++ [DAP]
-    in [LDRF code]
-
-
-
--------- Normal Implementation --------------
+-----------------------------------------------------------------
+-- Compile lambda term into SECD Code
+-----------------------------------------------------------------
 compile (Var x) sym 
     = case elemIndex x sym of
         Nothing -> error ("free variable: " ++ show x)
@@ -230,10 +219,17 @@ compileMain e o =let comp =  compile e [] ++ [HALT]
                 in if o then optimize comp [] else comp
 
 
--------------- OPTIMIZATIONS -----------------------
--- Otimization 1: simpler conditionals
--- Note: init is O(n), use Sequences to get better performance
+-----------------------------------------------------------------
+-- Optimize SECD Code
+-----------------------------------------------------------------
 optimize :: [Instr] -> [Ident]-> [Instr]
+-- Optimization 3: Avoid Extra Closures
+optimize (LDF fc:RTN:xs) sym = let
+        code = optimize fc sym
+    in [AA] ++ code ++ optimize xs sym 
+
+-- Optimization 1: simpler conditionals
+-- Note: init is O(n), use Sequences to get better performance
 optimize (SEL ct cf:RTN:xs) sym = let
         ct'   = init ct   
         cf'   = init cf   
