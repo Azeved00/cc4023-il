@@ -66,7 +66,7 @@ type Env   = [Value]
 type Dump  = [(Stack,Env,Code)]
 
 -- the SECD machine configuration
-type Conf  = (Stack, Env, Code, Dump, Store)
+type Conf  = (Stack, Env, Code, Dump, Store) 
 
 
 -----------------------------------------------------------------
@@ -121,9 +121,9 @@ execute (stack, env, HALT:code, dump, store)
     = (stack, env, [], dump, store)
 
 -- Implementation Of Optimizations
-execute (I n:stack, env, (TEST code1):code, dump,store)
-    | n==0      = (stack, env, code1, ([],[],code):dump, store)
-    | otherwise = (stack, env, code, dump, store)
+execute (I n:stack, env, (TEST code1):code, dump,store)= let
+        c = if n == 0 then code1 else code
+    in (stack, env, c, dump, store)
 
 execute (arg:A addr:stack, env, DAP:code, dump, store)
     = let Just (code',env')= Map.lookup addr store
@@ -222,12 +222,33 @@ compileMain e o =let comp =  compile e [] ++ [HALT]
 -----------------------------------------------------------------
 -- Optimize SECD Code
 -----------------------------------------------------------------
-optimize :: [Instr] -> [Ident]-> [Instr]
--- Optimization 3: Avoid Extra Closures
-optimize (LDF fc:RTN:xs) sym = let
-        code = optimize fc sym
-    in [AA] ++ code ++ optimize xs sym 
 
+checkTR' :: Conf -> Conf
+checkTR' (s,e,LD x:xs,d,m) = (A x:s,e,xs,d,m)
+checkTR' (s,e,LDC x:xs,d,m) = (I x:s,e,xs,d,m)
+checkTR' (_:_:s,e,ADD:xs,d,m) = (I 0:s,e,xs,d,m)
+checkTR' (_:_:s,e,SUB:xs,d,m) = (I 0:s,e,xs,d,m)
+checkTR' (_:_:s,e,MUL:xs,d,m) = (I 0:s,e,xs,d,m)
+checkTR' (_:A f:s,e,AP:xs,d,m) = (I 1:s,e,xs,d,m)
+checkTR' (_:A f:s,e,DAP:xs,d,m) = (I 0:s,e,xs,d,m)
+checkTR' (_:s,e,SEL _ _:xs,d,m) = (s,e,xs,d,m)
+checkTR' (_:s,e,TEST _:xs,d,m) = (s,e,xs,d,m)
+checkTR' (s,e,RTN:c,d,m) = error ("checkTR': undefined for " ++ show RTN)
+checkTR' (s,e,x:xs,d,m) = (s,e,xs,d,m)
+checkTR' conf  = error ("checkTR': undefined for " ++ show conf)
+
+checkTR :: [Instr] -> Bool
+checkTR code = (length s >= 2 && head (tail s) == A 1)
+    where   confs = iterate checkTR' ([],[],code,[],Map.empty)
+            trace = takeWhile (not.final) confs
+            (s, e, c, d, m) = last trace
+            final (s, e, c, d, m)  
+                | null c        = True
+                | c == []       = True
+                | head c == RTN = True
+                | otherwise     = False
+
+optimize :: [Instr] -> [Ident]-> [Instr]
 -- Optimization 1: simpler conditionals
 -- Note: init is O(n), use Sequences to get better performance
 optimize (SEL ct cf:RTN:xs) sym = let
@@ -236,6 +257,20 @@ optimize (SEL ct cf:RTN:xs) sym = let
         codeT = optimize (ct'++[RTN]) sym
         codeF = optimize (cf'++[RTN]) sym
     in [TEST codeT] ++ codeF ++ optimize xs sym 
+
+-- Optimization 4: full tail recursion
+optimize (LDRF fc:xs) sym = let
+        ofc = optimize fc sym
+        tr = checkTR ofc
+        fcode = if tr then init ofc ++ [TRAP] else ofc
+    in [LDRF fcode] ++ optimize xs sym 
+
+-- Optimization 3: Avoid Extra Closures
+optimize (LDF fc:RTN:xs) sym = let
+        code = optimize fc ("f":sym)
+    in [AA] ++ code ++ optimize xs sym 
+
+
 
 -- Optimization 2: direct application
 optimize (AP:RTN:xs) sym = let
@@ -250,10 +285,6 @@ optimize (SEL ct cf:xs) sym = let
 optimize (LDF x:xs) sym = let 
         code = optimize x sym
     in [LDF code] ++ optimize xs sym
-
-optimize (LDRF x:xs) sym = let 
-        code = optimize x sym
-    in [LDRF code] ++ optimize xs sym
 
 optimize (x:e) sym = [x] ++ optimize e sym
 optimize [] sym = []
