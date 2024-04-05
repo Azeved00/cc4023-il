@@ -12,9 +12,7 @@ import qualified System.Exit as Exit
 
 import Fun
 import qualified ParserTests
-import qualified ClosureTests   
 import qualified FactorialTests 
-import qualified RecursionTests 
 import qualified OptimizationTests
 
 
@@ -22,10 +20,8 @@ import qualified OptimizationTests
 main :: IO ()
 main = do
     runTestTT ParserTests.tl
-    runTestTT ClosureTests.tl
-    runTestTT FactorialTests.tl
-    runTestTT RecursionTests.tl
     runTestTT OptimizationTests.tl
+    runTestTT FactorialTests.tl
     return ()
     --let
     --    fails = foldr  (\r f -> f + (failures r )) 0 [s,c,f,r]

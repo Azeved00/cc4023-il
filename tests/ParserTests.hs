@@ -3,6 +3,8 @@ import Fun
 import SECD 
 import Test.HUnit
 
+testFunc x = parse $ lexer $ x
+
 -- simple computations
 test1 :: Test
 test1 = 
@@ -10,7 +12,7 @@ test1 =
         input   = "(42+23)*5"
         output  =  (Const 42 :+ Const 23) :* Const 5
     in
-    TestCase (assertEqual "simple test 1" output (parse $ lexer $ input))
+    TestCase (assertEqual "simple test 1" output (testFunc input))
  
 test1' :: Test
 test1' = 
@@ -18,7 +20,7 @@ test1' =
         input   = "5*(42+23)"
         output  =  Const 5 :* (Const 42 :+ Const 23)
     in
-    TestCase (assertEqual "simple test 1.2" output (parse $ lexer $ input))
+    TestCase (assertEqual "simple test 1.2" output (testFunc input))
  
  
 -- the identity function
@@ -29,7 +31,7 @@ test2 =
         message = "Identity Funciton" 
         output  = Lambda "x" (Var "x")
     in
-    TestCase $ assertEqual message output (parse $ lexer $ input)
+    TestCase $ assertEqual message output (testFunc input)
  
 -- the sucessor function
 test3 :: Test
@@ -39,7 +41,7 @@ test3 =
         message = "Successor Funciton" 
         output = Lambda "x" (Var "x" :+ Const 1)
     in
-    TestCase $ assertEqual message output (parse $ lexer $ input)
+    TestCase $ assertEqual message output (testFunc input)
  
  
 -- one function between two integers
@@ -53,7 +55,7 @@ test4 =
                (IfZero (Var "x" :- Var "y") 
                 (Var "y") (Var "x")))
     in
-    TestLabel message $ TestCase $ assertEqual message output (parse $ lexer $ input)
+    TestLabel message $ TestCase $ assertEqual message output (testFunc input)
 
 test5 :: Test
 test5 = 
@@ -62,7 +64,7 @@ test5 =
         message = "Application has higher priority then sum" 
         output = Lambda "x" (Const 1 :+ (App (Var "x") (Const 1)))
     in
-    TestLabel message $ TestCase $ assertEqual message output (parse $ lexer $ input)
+    TestLabel message $ TestCase $ assertEqual message output (testFunc input)
  
 
 test6 :: Test
@@ -72,10 +74,36 @@ test6 =
         message = "Application has higher priority then sum" 
         output = Lambda "x" ((Const 1 :+ (App (Var "x") (Const 1))) :+ Const 2)
     in
-    TestLabel message $ TestCase $ assertEqual message output (parse $ lexer $ input)
+    TestLabel message $ TestCase $ assertEqual message output (testFunc input)
+
+
+test7 :: Test
+test7 = 
+    let
+        input   = "let x = 42 in (\\y.(x+y))"
+        message = "closures test 1" 
+        output = Let "x" (Const 42) (Lambda "y" (Var "x" :+ Var "y"))
+    in
+    TestLabel  message $ TestCase $ assertEqual message output 
+        (testFunc input)
+
+test8 :: Test
+test8 = 
+    let
+        input   = "fix (\\f.\\n.ifzero (n) (0) (n*n + f (n-1)))"
+        message = "recursion sum" 
+        output = Fix (Lambda "f"
+                    (Lambda "n"
+                        (IfZero (Var "n")
+                            (Const 0)
+                            ((Var "n" :* Var "n") :+ 
+                                App (Var "f") (Var "n" :- Const 1)))))
+    in
+    TestCase $ assertEqual message output (testFunc input)
+
  
 tl = TestList [ TestLabel "Simple test 1.1" test1, 
                 TestLabel "Simple test 1.2" test1',
                 TestLabel "Idendity Function" test2,
                 TestLabel "Function between 2 ints" test3,
-                test4, test5, test6]
+                test4, test5, test6, test7, test8]

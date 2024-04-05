@@ -1,6 +1,6 @@
 module FactorialTests where
 import SECD
-import qualified SECD1
+import SECD1
 import Fun
 import Test.HUnit
 
@@ -45,16 +45,47 @@ test3 =
 test4 :: Test
 test4 = 
     let
+        input   = "(fix \\f.\\n.\\a.ifzero n a (f (n - 1) (a*n))) 10 1"
+        message = "Tail Recursive factorial" 
+        output =   [LDRF 
+                        [LDF 
+                            [LD 1,
+                            TEST [LD 0,RTN],
+                            LD 2,
+                            LD 1,
+                            LDC 1,
+                            SUB,
+                            AP,
+                            LD 0,
+                            LD 1,
+                            MUL,
+                            DAP],
+                        RTN],
+                    LDC 10,
+                    AP,
+                    LDC 1,
+                    AP,
+                    HALT]
+
+    in
+    TestLabel message $ TestCase $ assertEqual message output 
+            (SECD.compile (parse $ lexer $ input) True)
+
+
+
+test5 :: Test
+test5 = 
+    let
         input   = "(fix \\f.\\n.ifzero n 1 (f (n - 1)*n)) 10"
         message = "factorial of 10 non-optimized" 
         output =  SECD1.I 3628800
 
     in
     TestLabel message $ TestCase $ assertEqual message output 
-            (execute $ compile (parse $ lexer $ input) False)
+            (SECD.execute $ SECD.compile (parse $ lexer $ input) False)
 
-test5 :: Test
-test5 = 
+test6 :: Test
+test6 = 
     let
         input   = "(fix \\f.\\n.ifzero n 1 (f (n - 1)*n)) 10"
         message = "factorial of 10 optimized" 
@@ -62,7 +93,7 @@ test5 =
 
     in
     TestLabel message $ TestCase $ assertEqual message output 
-            (execute $ compile (parse $ lexer $ input) True)
+            (SECD.execute $ SECD.compile (parse $ lexer $ input) True)
 
 tl = TestList [ TestLabel "factorial definition" test1, 
                 TestLabel "factorial of 10" test2, 
