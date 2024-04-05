@@ -11,7 +11,7 @@ import Test.HUnit
 import qualified System.Exit as Exit
 
 import Fun
-import qualified SimpleTests    
+import qualified ParserTests
 import qualified ClosureTests   
 import qualified FactorialTests 
 import qualified RecursionTests 
@@ -21,7 +21,7 @@ import qualified OptimizationTests
 
 main :: IO ()
 main = do
-    runTestTT SimpleTests.tl
+    runTestTT ParserTests.tl
     runTestTT ClosureTests.tl
     runTestTT FactorialTests.tl
     runTestTT RecursionTests.tl
