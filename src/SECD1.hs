@@ -129,6 +129,13 @@ execute (arg:A addr:stack, env, DAP:code, dump, store)
     = let Just (code',env')= Map.lookup addr store
       in ([], arg:env', code', dump, store)
 
+execute (arg:A addr:stack, env, TRAP:code, dump, store)
+    = let Just (code',env')= Map.lookup addr store
+      in ([],arg:A addr:stack, code', dump, store)
+
+execute (x:stack, env, AA:code, dump,store)
+    = (stack, x:env, code, dump, store)
+
 execute conf
     = error ("execute: undefined for " ++ show conf)
 
@@ -266,9 +273,9 @@ optimize (LDRF fc:xs) sym = let
     in [LDRF fcode] ++ optimize xs sym 
 
 -- Optimization 3: Avoid Extra Closures
-optimize (LDF fc:RTN:xs) sym = let
-        code = optimize fc ("f":sym)
-    in [AA] ++ code ++ optimize xs sym 
+optimize (LDF fc:x:AP:xs) sym = let
+        code = optimize (init fc) sym
+    in [x] ++ [AA] ++ code ++ optimize xs sym 
 
 
 
