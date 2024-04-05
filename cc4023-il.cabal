@@ -28,7 +28,7 @@ executable SECD
 test-suite tests
     type:               exitcode-stdio-1.0
     main-is:            Main.hs
-    other-modules:      SimpleTests, ClosureTests, 
+    other-modules:      ParserTests, ClosureTests, 
                         FactorialTests, RecursionTests,
                         OptimizationTests
     build-depends:      base<4.20 , HUnit ^>=1.6, SECD-lib

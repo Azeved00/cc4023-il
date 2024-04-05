@@ -1,6 +1,4 @@
-
-
-module SimpleTests where
+module ParserTests where
 import Fun
 import SECD 
 import Test.HUnit
@@ -37,7 +35,7 @@ test2 =
 test3 :: Test
 test3 = 
     let
-        input   = "\\x.(x+1)"
+        input   = "\\x.x+1"
         message = "Successor Funciton" 
         output = Lambda "x" (Var "x" :+ Const 1)
     in
@@ -55,9 +53,29 @@ test4 =
                (IfZero (Var "x" :- Var "y") 
                 (Var "y") (Var "x")))
     in
-    TestCase $ assertEqual message output (parse $ lexer $ input)
+    TestLabel message $ TestCase $ assertEqual message output (parse $ lexer $ input)
+
+test5 :: Test
+test5 = 
+    let
+        input   = "\\x. 1+x 1 "
+        message = "Application has higher priority then sum" 
+        output = Lambda "x" (Const 1 :+ (App (Var "x") (Const 1)))
+    in
+    TestLabel message $ TestCase $ assertEqual message output (parse $ lexer $ input)
+ 
+
+test6 :: Test
+test6 = 
+    let
+        input   = "\\x. 1+x 1+2 "
+        message = "Application has higher priority then sum" 
+        output = Lambda "x" ((Const 1 :+ (App (Var "x") (Const 1))) :+ Const 2)
+    in
+    TestLabel message $ TestCase $ assertEqual message output (parse $ lexer $ input)
  
 tl = TestList [ TestLabel "Simple test 1.1" test1, 
                 TestLabel "Simple test 1.2" test1',
                 TestLabel "Idendity Function" test2,
-                TestLabel "Function between 2 ints" test3]
+                TestLabel "Function between 2 ints" test3,
+                test4, test5, test6]
