@@ -7,33 +7,23 @@ import Control.Monad
 import Control.Exception (SomeException)
 import SECD
 
-data ProgSettings =   Lex
-                | Parse
-                | Compile
-                | Execute
-                | Debug
-                deriving(Eq)
-
-
+type ProgSettings = (Bool,Bool,Bool,Bool,Bool)
 
 mainLoop::String -> ProgSettings -> InputT IO()
-mainLoop str set= 
+mainLoop str (l,p,c,o,e)= 
     let 
         tokens  = lexer str
         term    = parse tokens
-        instr   = compile term True
-        res     = debug instr
-    in do 
-    case set of
-        Lex     ->  outputStrLn $ show $ tokens
-        Parse   ->  outputStrLn $ show $ term
-        Compile ->  outputStrLn $ show $ instr
-        Execute ->  outputStrLn "Not Implemented"
-        Debug   -> do
-                outputStrLn $ show $ tokens
-                outputStrLn $ show $ term
-                outputStrLn $ show $ instr
-                mapM_ (\x -> outputStrLn $ show $ x) res
+        instr   = secd1Compile  term
+        oinstr  = secd1Optimize instr
+        trace   = secd1Debug    (if o then oinstr else instr) 
+    in do
+    if l then outputStrLn $ show $ tokens   else outputStr "" 
+    if p then outputStrLn $ show $ term     else outputStr ""
+    if c then outputStrLn $ show $ instr    else outputStr ""
+    if o then outputStrLn $ show $ oinstr   else outputStr ""
+    if e then mapM_ (\x -> outputStrLn $ show $ x) trace
+        else outputStr ""
     return()
     
 
@@ -45,24 +35,24 @@ rlSettings = defaultSettings {historyFile = Just "myhist"}
 main :: IO ()
 main = do
         args <- getArgs
-        let setting = case args of
-                ["lex",[l]]     -> Lex  
-                ["parse",[p]]   -> Parse
-                ["compile", [c]]-> Compile
-                ["debug", [d]]  -> Debug
-                _               -> Debug
+        let setting = (False,False,True,True,False)
         runInputT rlSettings $ withInterrupt $ loop 0 setting
     where
         loop :: Int -> ProgSettings -> InputT IO ()
-        loop n setting = do
+        loop n (l,p,c,o,e) = do
             minput <-  handleInterrupt (return (Just "Caught interrupted"))
                         $  getInputLine ("\ESC[33m\STX" ++ show n ++ " -> " ++ "\ESC[0m\STX")--λ
             case minput of
                 Nothing -> return ()
                 Just "exit" -> return ()
+                Just ":l" -> loop (n+1) (not l,p,c,o,e)
+                Just ":p" -> loop (n+1) (l,not p,c,o,e)
+                Just ":c" -> loop (n+1) (l,p,not c,o,e)
+                Just ":o" -> loop (n+1) (l,p,c,not o,e)
+                Just ":e" -> loop (n+1) (l,p,c,o,not e)
                 Just s -> do
-                            catch (mainLoop s setting) handler
-                            loop (n+1) setting 
+                            catch (mainLoop s (l,p,c,o,e)) handler
+                            loop (n+1) (l,p,c,o,e)
         handler :: SomeException -> InputT IO ()
         handler ex = do
                         outputStrLn $ "\ESC[0;41m\STXCaught exception:\ESC[0m\STX" 
