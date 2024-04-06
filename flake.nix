@@ -26,7 +26,8 @@
                 echo -ne "\033]0;${name}\007"
 
                 alias build="cabal --enable-nix build"
-                alias run="cabal --enable-nix run -v0"
+                alias secd1="cabal --enable-nix run SECD1"
+                alias secd2="cabal --enable-nix run SECD2"
                 alias test="cabal --enable-nix test --test-show-details=streaming --test-option=--color"
             '';
 

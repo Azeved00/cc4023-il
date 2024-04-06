@@ -17,5 +17,6 @@ secd1Execute i      = SECD1.run i
 secd1Debug code     = SECD1.debug code
 
 
-secd2Compile t b    = SECD2.runCodeGen $ SECD2.compileExpr t
-secd2Optimize t b   = [] 
+secd2RunState t     = SECD2.runCodeGen t
+secd2Compile t      = SECD2.compileExpr t
+--secd2Optimize t     = SECD2.optimize t 
