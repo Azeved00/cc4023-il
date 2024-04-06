@@ -31,7 +31,6 @@ data Instr = HALT            -- finished
            | TEST [Instr]    -- test branch
            | DAP             -- direct apply
            | AA              -- add arguments
-           | MA              -- modify arguments
            | TRAP            -- Full Tail Recursion
             deriving(Show,Eq)
 
@@ -223,7 +222,7 @@ compile (Let x e1 e2) sym
 -- compile the main expression
 compileMain :: Term -> Bool ->  [Instr]
 compileMain e o =let comp =  compile e [] ++ [HALT]
-                in if o then optimize comp [] else comp
+                in if o then optimize comp else comp
 
 
 -----------------------------------------------------------------
@@ -255,43 +254,43 @@ checkTR code = (length s >= 2 && head (tail s) == A 1)
                 | head c == RTN = True
                 | otherwise     = False
 
-optimize :: [Instr] -> [Ident]-> [Instr]
+optimize :: [Instr] -> [Instr]
 -- Optimization 1: simpler conditionals
 -- Note: init is O(n), use Sequences to get better performance
-optimize (SEL ct cf:RTN:xs) sym = let
+optimize (SEL ct cf:RTN:xs) = let
         ct'   = init ct   
         cf'   = init cf   
-        codeT = optimize (ct'++[RTN]) sym
-        codeF = optimize (cf'++[RTN]) sym
-    in [TEST codeT] ++ codeF ++ optimize xs sym 
+        codeT = optimize (ct'++[RTN])
+        codeF = optimize (cf'++[RTN])
+    in [TEST codeT] ++ codeF ++ optimize xs  
 
 -- Optimization 4: full tail recursion
-optimize (LDRF fc:xs) sym = let
-        ofc = optimize fc sym
+optimize (LDRF fc:xs)  = let
+        ofc = optimize fc 
         tr = checkTR ofc
         fcode = if tr then init ofc ++ [TRAP] else ofc
-    in [LDRF fcode] ++ optimize xs sym 
+    in [LDRF fcode] ++ optimize xs  
 
 -- Optimization 3: Avoid Extra Closures
-optimize (LDF fc:x:AP:xs) sym = let
-        code = optimize (init fc) sym
-    in [x] ++ [AA] ++ code ++ optimize xs sym 
+optimize (LDF fc:x:AP:xs)  = let
+        code = optimize (init fc) 
+    in [x] ++ [AA] ++ code ++ optimize xs  
 
 
 
 -- Optimization 2: direct application
-optimize (AP:RTN:xs) sym = let
-    in [DAP] ++ optimize xs sym 
+optimize (AP:RTN:xs)  = let
+    in [DAP] ++ optimize xs  
 
 -- Normal traversal
-optimize (SEL ct cf:xs) sym = let
-        codeT = optimize ct sym
-        codeF = optimize cf sym
-    in [SEL codeT codeF] ++ optimize xs sym
+optimize (SEL ct cf:xs)  = let
+        codeT = optimize ct 
+        codeF = optimize cf 
+    in [SEL codeT codeF] ++ optimize xs 
 
-optimize (LDF x:xs) sym = let 
-        code = optimize x sym
-    in [LDF code] ++ optimize xs sym
+optimize (LDF x:xs)  = let 
+        code = optimize x 
+    in [LDF code] ++ optimize xs 
 
-optimize (x:e) sym = [x] ++ optimize e sym
-optimize [] sym = []
+optimize (x:e)  = [x] ++ optimize e 
+optimize []  = []
