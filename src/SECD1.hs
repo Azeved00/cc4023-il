@@ -220,9 +220,8 @@ compile (Let x e1 e2) sym
  
 
 -- compile the main expression
-compileMain :: Term -> Bool ->  [Instr]
-compileMain e o =let comp =  compile e [] ++ [HALT]
-                in if o then optimize comp else comp
+compileMain :: Term ->  [Instr]
+compileMain e = compile e [] ++ [HALT]
 
 
 -----------------------------------------------------------------
