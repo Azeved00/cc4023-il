@@ -23,7 +23,6 @@ mainLoop str (l,p,c,o,e)=
     if p then outputStrLn $ show $ term     else outputStr ""
     if c then outputStrLn $ show $ secd2FlattenCode $ secd2RunState $ instr    else outputStr ""
     if o then outputStrLn $ show $ secd2FlattenCode $ oinstr   else outputStr ""
-    if o then outputStrLn $ show $ secd2FlattenCode $ oinstr   else outputStr ""
     --if e then mapM_ (\x -> outputStrLn $ show $ x) trace
     --    else outputStr ""
     return()
