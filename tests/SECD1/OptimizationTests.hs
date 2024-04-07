@@ -1,6 +1,6 @@
 module OptimizationTests where
 import Fun
-import qualified SECD 
+import SECD 
 import SECD1 
 import Test.HUnit
 
@@ -17,7 +17,7 @@ test1 =
                     HALT]
     in
     TestLabel message $ TestCase $ assertEqual message output 
-        (compileMain (SECD.parse $ SECD.lexer $ input) False)
+        (secd1Compile (SECD.parse $ SECD.lexer $ input))
 
 test2 :: Test
 test2 = 
@@ -32,7 +32,7 @@ test2 =
                     ,HALT]
     in
     TestLabel message $ TestCase $ assertEqual message output 
-        (compileMain (SECD.parse $ SECD.lexer $ input) True)
+        (secd1Optimize $ secd1Compile (SECD.parse $ SECD.lexer $ input))
 
 test3 :: Test
 test3 = 
@@ -49,7 +49,7 @@ test3 =
                     ,HALT]
     in
     TestLabel message $ TestCase $ assertEqual message output 
-        (compileMain (SECD.parse $ SECD.lexer $ input) True)
+        (secd1Optimize $ secd1Compile (SECD.parse $ SECD.lexer $ input))
 
 test4 :: Test
 test4 = 
@@ -64,7 +64,7 @@ test4 =
                     HALT]
     in
     TestLabel message $ TestCase $ assertEqual message output
-        (compileMain (SECD.parse $ SECD.lexer $ input) True)
+        (secd1Optimize $ secd1Compile (SECD.parse $ SECD.lexer $ input))
 
 test4' :: Test
 test4' = 
@@ -79,7 +79,7 @@ test4' =
                     HALT]
     in
     TestLabel message $ TestCase $ assertEqual message output
-        (compileMain (SECD.parse $ SECD.lexer $ input) True)
+        (secd1Optimize $ secd1Compile (SECD.parse $ SECD.lexer $ input))
 
 test5 :: Test
 test5 = 
@@ -99,7 +99,7 @@ test5 =
                     HALT]
     in
     TestLabel message $ TestCase $ assertEqual message output 
-        (compileMain (SECD.parse $ SECD.lexer $ input) True)
+        (secd1Optimize $ secd1Compile (SECD.parse $ SECD.lexer $ input))
 
 
 

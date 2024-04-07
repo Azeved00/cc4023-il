@@ -52,7 +52,7 @@ test-suite SECD2-Test
     type:               exitcode-stdio-1.0
     main-is:            Main.hs
     other-modules:      OptimizationTests, ExecutionTests
-    build-depends:      base<4.20 , HUnit ^>=1.6, SECD-lib
+    build-depends:      base<4.20 , HUnit ^>=1.6, SECD-lib, containers,
     hs-source-dirs:     tests/SECD2
     default-language:   Haskell2010
 

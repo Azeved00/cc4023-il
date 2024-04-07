@@ -15,13 +15,13 @@ mainLoop str (l,p,c,o,e)=
         tokens  = lexer str
         term    = parse tokens
         instr   = secd2Compile  term
-        --oinstr  = secd2Optimize instr
+        oinstr  = secd2Optimize instr
         --trace   = secd1Debug    (if o then oinstr else instr) 
     in do
     if l then outputStrLn $ show $ tokens   else outputStr "" 
     if p then outputStrLn $ show $ term     else outputStr ""
     if c then outputStrLn $ show $ secd2RunState $ instr    else outputStr ""
-    --if o then outputStrLn $ show $ oinstr   else outputStr ""
+    if o then outputStrLn $ show $ oinstr   else outputStr ""
     --if e then mapM_ (\x -> outputStrLn $ show $ x) trace
     --    else outputStr ""
     return()

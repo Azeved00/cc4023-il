@@ -69,7 +69,7 @@ test4 =
 
     in
     TestLabel message $ TestCase $ assertEqual message output 
-            (SECD.compile (parse $ lexer $ input) True)
+            (secd1Optimize $ secd1Compile $ parse $ lexer $ input)
 
 
 
@@ -82,7 +82,7 @@ test5 =
 
     in
     TestLabel message $ TestCase $ assertEqual message output 
-            (SECD.execute $ SECD.compile (parse $ lexer $ input) False)
+            (secd1Execute $ secd1Compile $ parse $ lexer $ input)
 
 test6 :: Test
 test6 = 
@@ -93,7 +93,7 @@ test6 =
 
     in
     TestLabel message $ TestCase $ assertEqual message output 
-            (SECD.execute $ SECD.compile (parse $ lexer $ input) True)
+            (secd1Execute $ secd1Optimize $ secd1Compile $ parse $ lexer $ input)
 
 tl = TestList [ TestLabel "factorial definition" test1, 
                 TestLabel "factorial of 10" test2, 

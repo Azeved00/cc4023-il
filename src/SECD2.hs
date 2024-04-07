@@ -30,7 +30,11 @@ data Instr l = HALT            -- finished
              | AP              -- apply
              | RTN             -- return 
              | JOIN            -- close branch
-             deriving (Show, Functor)
+             | TEST l          -- test branch
+             | DAP             -- direct apply
+             | AA              -- add arguments
+             | TRAP            -- Full Tail Recursion
+             deriving (Show, Functor, Eq)
 
 -- symbolic labels are just strings
 type Label = String
@@ -121,6 +125,130 @@ runCodeGen cgen =  Map.insert "_main" code0 labels
   where (code0, labels) = runState cgen Map.empty
 
 
+-----------------------------------------------------------------
+-- Optimize SECD Code
+-----------------------------------------------------------------
+-- Simulate  the stack to figure out 
+-- if a recursive call occurs in last AP (if it exists)
+-- that is if, before the RTN instruction: 
+-- it is an AP and
+-- the second element in the stack is the adress of the function we are evaluating
+data Stack  = I Int 
+            | A Int
+            deriving(Eq,Show)
+
+checkTR' :: ([Stack], Block) -> ([Stack], Block)
+checkTR' (s,LD x:xs)        = (A x:s,xs)
+checkTR' (s,LDC x:xs)       = (I x:s,xs)
+checkTR' (_:_:s,ADD:xs)     = (I 0:s,xs)
+checkTR' (_:_:s,SUB:xs)     = (I 0:s,xs)
+checkTR' (_:_:s,MUL:xs)     = (I 0:s,xs)
+checkTR' (_:_:s,AP:xs)      = (I 1:s,xs)
+checkTR' (_:_:s,DAP:xs)     = (I 0:s,xs)
+checkTR' (_:s,SEL _ _:xs)   = (s,xs)
+checkTR' (_:s,TEST _:xs)    = (s,xs)
+checkTR' (s,RTN:c)          = error ("checkTR': undefined for RTN" )
+checkTR' (s,x:xs)           = (s,xs)
+checkTR' conf               = error ("checkTR': undefined for " ++ show conf)
+
+checkTR :: Block -> Bool
+checkTR code = (length s >= 2 && head (tail s) == A 1)
+    where   confs = iterate checkTR' ([],code)
+            trace = takeWhile (not.final) confs
+            (s, c) = last trace
+            final (s, c)  
+                | null c        = True
+                | c == []       = True
+                | head c == RTN = True
+                | otherwise     = False
+
+optimizeBlock ::  Map Label Block -> Block -> Label -> (Map Label Block, Block)
+-- Optimization 1: simpler conditionals
+optimizeBlock tab ((SEL lt lf):RTN:xs) l = 
+    let
+        fct = mapaux $ Map.lookup lt tab
+        (tab',ofct) = optimizeBlock tab ((init fct) ++ [RTN]) lt  -- substitute join with rtn
+        tab1 = Map.insert lt ofct tab'                    -- update code
+
+        fcf = mapaux $ Map.lookup lf tab1
+        (tab1',ofcf) = optimizeBlock tab1 ((init fcf)++[RTN]) lf --take join out and then optimize
+        tab2 = Map.delete lf tab1'              --delete because it will be inlined
+
+        (ftab,result) = optimizeBlock tab2 xs l
+    in (ftab,[TEST lt] ++ ofcf ++ result)
+
+-- Optimization 4: full tail recursion
+optimizeBlock tab (LDRF fl:xs) l =
+    let
+        fc = mapaux $ Map.lookup fl tab 
+        (tab', ofc) = optimizeBlock tab fc fl
+        tr = checkTR ofc
+        code = if tr then (takeUntilAP ofc) ++ [TRAP] else ofc  
+        tab1 = Map.insert fl code tab'
+        (ftab, result) = optimizeBlock tab1 xs l
+        takeUntilAP (AP:RTN:[]) = []
+        takeUntilAP (DAP:[]) = []
+        takeUntilAP ([]) = []
+        takeUntilAP (x:xs) = x:(takeUntilAP xs)
+    in (ftab,[LDRF fl] ++ result)
+
+-- Optimization 3: Avoid Extra Closures
+optimizeBlock tab (LDF fl:x:AP:xs) l = 
+    let
+        fc = mapaux $ Map.lookup fl tab
+        -- remove RTN from function code and then optimize
+        (tab', ofc) = optimizeBlock tab (init fc) fl   
+        -- delete beacuse it will be inlined
+        tab1 = Map.delete fl tab'              
+        -- parameter of function goes to start
+        (ftab,result) = optimizeBlock tab1 xs l
+    in (ftab,[x] ++ [AA] ++ ofc ++ result)
+
+-- Optimization 2: direct application
+optimizeBlock tab (AP:RTN:xs) l  = let
+        (ftab,result) = optimizeBlock tab xs l
+    in (ftab, [DAP] ++ result)
+
+-- Normal traversal
+optimizeBlock tab (SEL ct cf:xs) l = 
+    let
+        fc1 =mapaux $ Map.lookup ct tab 
+        (tab',codet) = optimizeBlock tab fc1 ct
+        tab1 = Map.insert ct codet tab'
+
+        fc2 = mapaux $ Map.lookup cf tab1 
+        (tab1', codef) = optimizeBlock tab1 fc2 cf
+        tab2 = Map.insert cf codef tab1'
+
+        (ftab,result) = optimizeBlock tab2 xs l
+    in (ftab,[SEL ct cf] ++ result)
+
+optimizeBlock tab (LDF x:xs) l = 
+    let
+        fc = mapaux $ Map.lookup x tab 
+        (tab', code) = optimizeBlock tab fc x
+        tab1 = Map.insert x code tab'
+        
+        (ftab,result) = optimizeBlock tab1 xs l
+    in (ftab,[LDF x] ++ result)
+optimizeBlock tab (x:xs) l  = 
+    let
+    (ftab,result) = optimizeBlock tab xs l
+    in (ftab,[x] ++ result)
+optimizeBlock tab [] _ = (tab,[])
+
+optimize :: CodeGen Block -> Map Label Block
+optimize s = 
+    let
+        table = runCodeGen s
+        mainc = mapaux $ Map.lookup "_main" table
+        (tab,code) = optimizeBlock table mainc "_main"
+        ftab = Map.insert "_main" code tab
+    in ftab
+        
+mapaux Nothing = []
+mapaux (Just c) = c
+
 -----------------------------------------------------------------------------
 -- resolving labels
 -----------------------------------------------------------------------------
@@ -164,6 +292,10 @@ asmInstr (LDRF l)    = [8, l]
 asmInstr AP          = [9]
 asmInstr RTN         = [10]
 asmInstr JOIN        = [11]
+asmInstr (TEST l)    = [12, l]
+asmInstr DAP         = [13]
+asmInstr AA          = [14]
+asmInstr TRAP        = [15]
 
 -- assemble a code block  
 asmCode :: [Instr Addr] ->  [Bytecode]
@@ -177,6 +309,7 @@ sizeof instr = case instr of
   LDC _ -> 2
   LDF _ -> 2
   LDRF _ -> 2
+  TEST _ -> 2
   _ -> 1
 
 
@@ -198,3 +331,4 @@ compileToFile :: FilePath -> Term -> IO ()
 compileToFile path expr
   = writeFile path $ showBytecode $ compileBytecode expr
   
+

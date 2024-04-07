@@ -19,4 +19,4 @@ secd1Debug code     = SECD1.debug code
 
 secd2RunState t     = SECD2.runCodeGen t
 secd2Compile t      = SECD2.compileExpr t
---secd2Optimize t     = SECD2.optimize t 
+secd2Optimize t     = SECD2.optimize t 
