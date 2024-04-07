@@ -65,6 +65,7 @@ value_t interp(void) {
   int sp = 0;          // stack pointer 
   int dp = 0;          // dump pointer
   env_t env = NULL;    // environment pointer
+                       //
 
   for (;;) {            // loop
     value_t opa, opb;   // temporary operands
@@ -73,8 +74,33 @@ value_t interp(void) {
     env_t nenv;         // temporary environment
 
     int opcode = code[pc++];    // fetch next opcode
+    printf("opcode: %d\n",opcode);
 
     switch(opcode) {
+    // Optimizations
+    case TEST:
+      opa = stack[--sp];  // integer on top of stack
+      if (opa == 0) pc = code[pc];
+      pc++;
+      break;
+   case AA:
+      opa = stack[--sp];                // function argument
+      dp++;
+      env = extend(opa, env);   // augment environment
+      break;
+    case DAP:
+      opa = stack[--sp];                // function argument
+      cptr = (closure_t*) stack[--sp];  // function closure
+      env = extend(opa, GET_ENV(cptr));   // augment environment
+      pc = GET_CODE(cptr);                // jump to code address in closure
+      break;
+    case TRAP:
+      opa = stack[--sp];                // function argument
+      cptr = (closure_t*) stack[--sp];  // function closure
+      env = extend(opa, GET_ENV(cptr));   // augment environment
+      pc = GET_CODE(cptr);                // jump to code address in closure
+      break;
+    // Base Code
     case LDC: 
       opa = (value_t)code[pc++];  // fetch operand
       stack[sp++] = opa;          // push it
@@ -107,10 +133,10 @@ value_t interp(void) {
       opa = stack[--sp];  // integer on top of stack
       dump[dp].pc = pc+2; // save PC on dump
       dp++;
-      if (opa == 0)
-	pc = code[pc];
-      else
-	pc = code[pc+1];
+      if (opa == 0) 
+        pc = code[pc];
+      else 
+        pc = code[pc+1];
       break;
 
     case LDF: 
@@ -179,20 +205,29 @@ int read_code(FILE *f) {
 }
 
 
-int main(void) {
-  value_t top;  /* top of stack */
+int main(int argc, char *argv[]) {
+    value_t top;  /* top of stack */
+    FILE *file = stdin;
+    if (argc >= 2) {
+        char *filename = argv[1];
+        FILE *file = fopen(filename, "r");
+        if (file == NULL) {
+            perror("Error opening file");
+            return 1; // Return non-zero to indicate error
+        }
+    }
+    /* allocate segments and heap
+    */
 
-  /* allocate segments and heap
-   */
-  init_segments(CODE_MAX, STACK_MAX, DUMP_MAX);
-  init_heap(HEAP_MAX);
-  read_code(stdin);
-  top = interp();
-  printf("%d\n", (int)top);
+    init_segments(CODE_MAX, STACK_MAX, DUMP_MAX);
+    init_heap(HEAP_MAX);
+    read_code(file);
+    top = interp();
+    printf("%d\n", (int)top);
 
-  /* clean-up 
-   */
-  free_segments();
-  free_heap();
-  return 0;
+    /* clean-up 
+    */
+    free_segments();
+    free_heap();
+    return 0;
 }

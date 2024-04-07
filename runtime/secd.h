@@ -20,6 +20,10 @@
 #define AP      9
 #define RTN     10
 #define JOIN    11
+#define TEST    12
+#define DAP     13
+#define AA      14
+#define TRAP    15
 
 /* values: 
    either an int or a pointer

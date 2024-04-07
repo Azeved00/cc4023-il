@@ -1,3 +1,6 @@
 dist-*
 myhist
 .ccls-cache
+a
+runtime/secd
+runtime/a

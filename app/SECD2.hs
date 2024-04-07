@@ -2,6 +2,7 @@ module Main where
 
 import System.Environment
 import System.Console.Haskeline
+import System.FilePath
 import Control.Monad.Catch
 import Control.Monad
 import Control.Exception (SomeException)
@@ -20,12 +21,19 @@ mainLoop str (l,p,c,o,e)=
     in do
     if l then outputStrLn $ show $ tokens   else outputStr "" 
     if p then outputStrLn $ show $ term     else outputStr ""
-    if c then outputStrLn $ show $ secd2RunState $ instr    else outputStr ""
-    if o then outputStrLn $ show $ oinstr   else outputStr ""
+    if c then outputStrLn $ show $ secd2FlattenCode $ secd2RunState $ instr    else outputStr ""
+    if o then outputStrLn $ show $ secd2FlattenCode $ oinstr   else outputStr ""
+    if o then outputStrLn $ show $ secd2FlattenCode $ oinstr   else outputStr ""
     --if e then mapM_ (\x -> outputStrLn $ show $ x) trace
     --    else outputStr ""
     return()
     
+writeToFile::String -> String -> IO ()
+writeToFile str path = do 
+    let comp = secd2Optimize $ secd2Compile $ parse $ lexer str
+    runInputT rlSettings $ outputStrLn $ show $ comp
+    secd2ToFile path $ comp 
+    return ()
 
 rlSettings :: Settings IO
 rlSettings = defaultSettings {historyFile = Just "myhist"}
@@ -36,11 +44,12 @@ main :: IO ()
 main = do
         args <- getArgs
         _ <- case args of
-            []      -> runInputT rlSettings $ withInterrupt $ loop 0 setting
+            ("-o":p:s:_)   ->  writeToFile s p
             (s:_)   -> runInputT rlSettings $ mainLoop s setting
+            []      -> runInputT rlSettings $ withInterrupt $ loop 0 setting
         return ()
     where
-        setting = (False,False,True,True,False)
+        setting = (False,False,False,True,False)
         loop :: Int -> ProgSettings -> InputT IO ()
         loop n (l,p,c,o,e) = do
             minput <-  handleInterrupt (return (Just "Caught interrupted"))

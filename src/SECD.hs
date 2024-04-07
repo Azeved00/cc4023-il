@@ -18,5 +18,7 @@ secd1Debug code     = SECD1.debug code
 
 
 secd2RunState t     = SECD2.runCodeGen t
+secd2FlattenCode t     = SECD2.flattenCode t
 secd2Compile t      = SECD2.compileExpr t
 secd2Optimize t     = SECD2.optimize t 
+secd2ToFile path map    = writeFile path $ SECD2.showBytecode $ SECD2.asmCode $ SECD2.flattenCode map 

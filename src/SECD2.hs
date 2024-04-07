@@ -176,6 +176,18 @@ optimizeBlock tab ((SEL lt lf):RTN:xs) l =
 
         (ftab,result) = optimizeBlock tab2 xs l
     in (ftab,[TEST lt] ++ ofcf ++ result)
+optimizeBlock tab ((SEL lt lf):HALT:xs) l = 
+    let
+        fct = mapaux $ Map.lookup lt tab
+        (tab',ofct) = optimizeBlock tab ((init fct) ++ [RTN]) lt  -- substitute join with rtn
+        tab1 = Map.insert lt ofct tab'                    -- update code
+
+        fcf = mapaux $ Map.lookup lf tab1
+        (tab1',ofcf) = optimizeBlock tab1 ((init fcf)++[RTN]) lf --take join out and then optimize
+        tab2 = Map.delete lf tab1'              --delete because it will be inlined
+
+        (ftab,result) = optimizeBlock tab2 xs l
+    in (ftab,[TEST lt] ++ ofcf ++ result)
 
 -- Optimization 4: full tail recursion
 optimizeBlock tab (LDRF fl:xs) l =
@@ -197,12 +209,12 @@ optimizeBlock tab (LDF fl:x:AP:xs) l =
     let
         fc = mapaux $ Map.lookup fl tab
         -- remove RTN from function code and then optimize
-        (tab', ofc) = optimizeBlock tab (init fc) fl   
+        (tab', ofc) = optimizeBlock tab fc fl   
         -- delete beacuse it will be inlined
         tab1 = Map.delete fl tab'              
         -- parameter of function goes to start
         (ftab,result) = optimizeBlock tab1 xs l
-    in (ftab,[x] ++ [AA] ++ ofc ++ result)
+    in (ftab,[x] ++ [AA] ++ (init ofc) ++ result)
 
 -- Optimization 2: direct application
 optimizeBlock tab (AP:RTN:xs) l  = let
@@ -320,7 +332,7 @@ sizeof instr = case instr of
 -- generate bytecode for a closed term
 compileBytecode :: Term -> [Bytecode]
 compileBytecode
-  = asmCode . flattenCode . runCodeGen  . compileExpr
+  = asmCode . flattenCode . optimize  . compileExpr
 
 -- write bytecode one item per line
 showBytecode :: [Bytecode] -> String

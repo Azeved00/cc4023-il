@@ -26,9 +26,10 @@
                 echo -ne "\033]0;${name}\007"
 
                 alias build="cabal --enable-nix build"
-                alias secd1="cabal --enable-nix run SECD1"
-                alias secd2="cabal --enable-nix run SECD2"
+                alias secd1="cabal --enable-nix run SECD1 --"
                 alias test="cabal --enable-nix test --test-show-details=streaming --test-option=--color"
+                alias secd2='cabal --enable-nix run SECD2 -- -o a'
+                alias run2='make --directory=runtime secd && runtime/secd < a '
             '';
 
         };
