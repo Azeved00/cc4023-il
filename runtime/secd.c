@@ -72,16 +72,23 @@ value_t interp(void) {
     int t;              // temporary register
     closure_t *cptr;    // closure pointer
     env_t nenv;         // temporary environment
-
+                        //
     int opcode = code[pc++];    // fetch next opcode
-    printf("opcode: %d\n",opcode);
+    if (env == NULL){
+        printf("stack: %ld, opcode: %d, env: NULL \n",
+            stack[sp-1],opcode);
+    }
+    else {
+        printf("stack: %ld, opcode: %d, env: %ld \n",
+            stack[sp-1],opcode, GET_ELM(env));
+    }
 
     switch(opcode) {
     // Optimizations
     case TEST:
       opa = stack[--sp];  // integer on top of stack
       if (opa == 0) pc = code[pc];
-      pc++;
+      else pc++;
       break;
    case AA:
       opa = stack[--sp];                // function argument
@@ -95,11 +102,11 @@ value_t interp(void) {
       pc = GET_CODE(cptr);                // jump to code address in closure
       break;
     case TRAP:
-      opa = stack[--sp];                // function argument
-      cptr = (closure_t*) stack[--sp];  // function closure
-      env = extend(opa, GET_ENV(cptr));   // augment environment
-      pc = GET_CODE(cptr);                // jump to code address in closure
-      break;
+        opa = stack[--sp];                // function argument
+        cptr = (closure_t*) stack[--sp];  // function closure
+        SET_ELM(env,opa);           // substitute top of env with top of stack
+        pc = GET_CODE(cptr);              // jump to code address in closure
+        break;
     // Base Code
     case LDC: 
       opa = (value_t)code[pc++];  // fetch operand
