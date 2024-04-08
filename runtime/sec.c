@@ -7,6 +7,8 @@
 #include <assert.h>
 #include "secd.h"
 
+#define DEBUG 0
+
 typedef struct {
     value_t v;
     dump_t d;
@@ -114,13 +116,15 @@ value_t interp(void) {
         dump_t dump;
 
         int opcode = code[pc++];    // fetch next opcode
-        if (env == NULL){
-            print_stack(sp);
-            printf(", opcode: %d, env: NULL \n",opcode);
-        }
-        else {
-            print_stack(sp);
-            printf(", opcode: %d, env: %ld \n", opcode, GET_ELM(env));
+        if (DEBUG){
+            if (env == NULL){
+                print_stack(sp);
+                printf(", opcode: %d, env: NULL \n",opcode);
+            }
+            else {
+                print_stack(sp);
+                printf(", opcode: %d, env: %ld \n", opcode, GET_ELM(env));
+            }
         }
 
         switch(opcode) {
@@ -261,7 +265,6 @@ int main(int argc, char *argv[]) {
     init_segments(CODE_MAX, STACK_MAX, DUMP_MAX);
     init_heap(HEAP_MAX);
     read_code(file);
-    printf("starting interpreter\n");
     top = interp();
     printf("%d\n", (int)top);
 
