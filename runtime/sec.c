@@ -240,7 +240,7 @@ int read_code(FILE *f) {
     int i = 0, data;
 
     while(!feof(f) && i<CODE_MAX) {
-        fscanf(f, "%d\n", &data);
+        if(fscanf(f, "%d\n", &data)!=1) return 0;
         code[i++] = data;
     }
     return i;
