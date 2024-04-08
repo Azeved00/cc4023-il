@@ -52,5 +52,6 @@ Atom : var                      { Var $1 }
      
 {
 parseError :: [Token] -> a
+parseError [] = error ("Parse Error: @ end")
 parseError toks = error ("Parse Error: @" ++ (show (head toks)) ++ " in " ++ show (take 10 toks) ++ " " ++ show (length toks))
 }
