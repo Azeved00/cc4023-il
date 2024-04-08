@@ -30,8 +30,8 @@
                 alias secd1="cabal --enable-nix run SECD1 --"
                 alias secd2='cabal --enable-nix run SECD2 -- -o a'
 
-                alias rund='make --directory=runtime secd && runtime/secd < a '
-                alias run='make --directory=runtime sec && runtime/sec < a '
+                alias rund='make secd && bin/secd < a '
+                alias run=' make  sec && bin/sec  < a '
             '';
 
         };
