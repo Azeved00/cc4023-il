@@ -30,34 +30,46 @@ Atom : var                      { Var $1 }
 
 ### Examples
 Expressions let 
+
     let x = 4
 
 Lambda expressions
+
     \x.x 
 
 Conditionals
+
     ifzero 1 2 3
 
 Applications
+
     (\x.x) 4
 
 Recursive functions
+
     fix \f.\z.ifzero x 1 (f (x-1))
 
 ##  Running the code
 
 ### For SECD1
 Running the tests:
+
     cabal test SECD1 --test-show-details=streaming
 
 Running in repl (read-eval-print-loop)
+
     cabal run SECD1
 
 repl has the commands
-lexer       - `:l` 
+
+Lexer       - `:l` 
+
 Parser      - `:p`
+
 Compiler    - `:c`
+
 Optimizer   - `:o`
+
 Interpreter - `:e`
 
 Each command is meant to be given alone and,
@@ -69,19 +81,30 @@ the optimizer output are displayed.
 
 ### For SECD2
 Running the tests:
+
     cabal test SECD2 --test-show-details=streaming
+
 Running in repl mode:
+
     cabal --enable-nix run SECD2
+
 Optimizing a single expression expr
+
     cabal --enable-nix run SECD2 -- "expr"
+
 Optimizing an expression and putting it in file "a"
+
     cabal --enable-nix run SECD2 -- -o a "expr"
 
 
 repl has the commands
-lexer       - `:l` 
+
+Lexer       - `:l` 
+
 Parser      - `:p`
+
 Compiler    - `:c`
+
 Optimizer   - `:o`
 
 Each command is meant to be given alone and,
@@ -93,10 +116,20 @@ By default only the optimizer output is displayed
 
 
 ### For C interpreter
-make secd && bin/secd < a
+Compiling the binary:
+
+     make secd
+Running it by giving it a file "a" 
+
+     bin/secd < a
 
 ### For dumpless C interpreter
-make  sec && bin/sec  < a
+Compiling the binary:
+
+     make sec
+Running it by giving it a file "a" 
+
+     bin/sec < a
 
 ## Assigment
 
