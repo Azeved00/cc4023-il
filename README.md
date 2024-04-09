@@ -9,23 +9,23 @@
 ## Syntax of expressions
 ### Grammar
 ```
-Lamb : lambda var '.' Lamb      { Lambda $2 $4 }
-     | Term           %prec F   { $1 }
+Lamb : lambda var '.' Lamb      
+     | Term
 
-Term : Term '+' Term            { $1 :+ $3 }
-     | Term '-' Term            { $1 :- $3 }
-     | Term '*' Term            { $1 :* $3 }
-     | ifzero Atom Atom Atom    { IfZero $2 $3 $4 }
-     | let var '=' Atom in Atom { Let $2 $4 $6 }
-     | fix Lamb                 { Fix $2 }
-     | Apply                    { $1 }
+Term : Term '+' Term        
+     | Term '-' Term         
+     | Term '*' Term           
+     | ifzero Atom Atom Atom   
+     | let var '=' Atom in Atom
+     | fix Lamb                
+     | Apply                   
 
-Apply: Apply Atom %prec APPLY   { App $1 $2 }
-     | Atom                     { $1 }
+Apply: Apply Atom 
+     | Atom       
 
-Atom : var                      { Var $1 }
-     | const                    { Const $1 }
-     | '(' Lamb ')'             { $2 }
+Atom : var        
+     | const 
+     | '(' Lamb ')' 
 ```
 
 ### Examples
