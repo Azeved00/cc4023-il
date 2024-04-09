@@ -80,9 +80,12 @@ By default both the compiler and
 the optimizer output are displayed.
 
 ### For SECD2
-Running the tests:
+Running the optimizer tests:
 
     cabal test SECD2 --test-show-details=streaming
+Running the interpreter tests:
+
+     ./tests/Interp/interp.sh
 
 Running in repl mode:
 
